@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'store/tus_store.dart';
-import 'uploader/tus_uploader.dart';
+import 'uploader/tus_uploader_client.dart';
 import 'uploader/tus_uploader_base.dart';
 
 ///
@@ -15,13 +15,13 @@ class TusClient {
   static final String TUS_VERSION = '1.0.0';
 
   /// The endpoint url
-  final Uri endpointUrl;
+  final Uri endpoint;
 
-  /// Headers which will be added to every HTTP requests made by this TusClient
-  /// instance.
-  ///
-  /// These may to overwrite tus-specific headers, which can be identified by
-  /// their Tus-* prefix, and can cause unexpected behavior.
+  /// This can be used to set the server specific headers. These headers would
+  /// be sent along with every request made by the client to the server. This
+  /// may be used to set authentication headers. These headers should not
+  /// include headers required by tus protocol. If not set this defaults to an
+  /// empty dictionary.
   Map<String, String> headers;
 
   OnProgressCallback? onProgress;
@@ -35,22 +35,24 @@ class TusClient {
   /// Disables upload resuming.
   void disableResuming() => urlStore = null;
 
-  /// Creates a new [TusClient] instance with [endpointUrl] as the server url.
+  /// Creates a new [TusClient] instance with [endpoint] as the server url.
   /// If [urlStore] is defined, then resuming is enabled (see [resumingEnabled]).
   ///
   /// ```dart
   /// var client = TusClient(Uri.http('localhost:1080', '/files'));
   /// ```
   TusClient(
-    this.endpointUrl, {
+    this.endpoint, {
     this.headers = const <String, String>{},
     this.urlStore,
   });
 
-  TusUploaderBase createUploader({
+  /// Gets an upload URL from the [endpoint] and creates a new uploader.
+  /// The arguments are the same as [TusUploader]'s constructor.
+  Future<TusUploader> createUploader({
     required File file,
-  }) =>
-      TusUploader(
+  }) async =>
+      await TusClientUploader.create(
         client: this,
         file: file,
       );
