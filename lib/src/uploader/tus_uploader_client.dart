@@ -28,7 +28,7 @@ class TusClientUploader extends TusUploader {
     return uploader;
   }
 
-  Future<Uri> createUrl() async {
+  Future<void> createUrl() async {
     var request = await HttpClient().postUrl(_client.endpoint)
       ..headers.set('Upload-Length', (await file.length()).toString());
 
@@ -60,10 +60,10 @@ class TusClientUploader extends TusUploader {
 
     if (_client.resumingEnabled) {
       // TODO: get fingerprint correctly
-      _client.urlStore?.set('1234', url);
+      _client.store?.set('1234', url);
     }
 
-    return url;
+    this.url = url;
   }
 
   @override

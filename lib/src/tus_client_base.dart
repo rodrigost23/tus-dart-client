@@ -11,7 +11,6 @@ typedef OnProgressCallback = void Function(
 /// This class is used for creating or resuming uploads.
 class TusClient {
   /// Version of the tus protocol used by the client.
-  /// The remote server needs to support this version, too
   static final String TUS_VERSION = '1.0.0';
 
   /// The endpoint url
@@ -28,15 +27,15 @@ class TusClient {
 
   /// The store in which to save files to resume later. If set to null,
   /// disables resuming.
-  TusStore? urlStore;
+  TusStore? store;
 
-  bool get resumingEnabled => urlStore != null;
+  bool get resumingEnabled => store != null;
 
   /// Disables upload resuming.
-  void disableResuming() => urlStore = null;
+  void disableResuming() => store = null;
 
   /// Creates a new [TusClient] instance with [endpoint] as the server url.
-  /// If [urlStore] is defined, then resuming is enabled (see [resumingEnabled]).
+  /// If [store] is defined, then resuming is enabled (see [resumingEnabled]).
   ///
   /// ```dart
   /// var client = TusClient(Uri.http('localhost:1080', '/files'));
@@ -44,7 +43,7 @@ class TusClient {
   TusClient(
     this.endpoint, {
     this.headers = const <String, String>{},
-    this.urlStore,
+    this.store,
   });
 
   /// Gets an upload URL from the [endpoint] and creates a new uploader.
