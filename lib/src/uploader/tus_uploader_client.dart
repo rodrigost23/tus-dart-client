@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:tus_client/src/exception/tus_protocol_exception.dart';
 import 'package:tus_client/src/tus_client_base.dart';
 
 import 'tus_uploader_base.dart';
@@ -45,13 +46,12 @@ class TusClientUploader extends TusUploader {
 
     var responseCode = response.statusCode;
     if (responseCode < 200 || responseCode >= 300) {
-      // TODO: use a more specific Exception
-      throw Exception('unexpected status code ($responseCode) while creating upload');
+      throw TusProtocolException.fromResponse(response);
     }
 
     String? urlStr = response.headers.value('Location');
 
-    if (urlStr?.isEmpty ?? false) {
+    if (urlStr?.isEmpty ?? true) {
       // TODO: use a more specific Exception
       throw Exception('missing upload URL in response for creating upload');
     }
@@ -64,11 +64,5 @@ class TusClientUploader extends TusUploader {
     }
 
     this.url = url;
-  }
-
-  @override
-  Future<void> upload() {
-    // TODO: implement upload
-    throw UnimplementedError();
   }
 }

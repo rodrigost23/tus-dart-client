@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:tus_client/src/exception/tus_protocol_exception.dart';
 import 'package:tus_client/src/tus_client_base.dart';
 
 abstract class TusUploader {
@@ -57,8 +58,7 @@ abstract class TusUploader {
     var response = await request.close();
 
     if (response.statusCode != 204) {
-      // TODO: throw a more specific exception
-      throw Exception(await response.transform(ascii.decoder).single);
+      throw TusProtocolException.fromResponse(response);
     }
   }
 }
