@@ -15,4 +15,8 @@ void main() {
   test('Get uploader URL', () async {
     expect(uploader.url.toString(), startsWith(client.endpoint.toString()));
   });
+
+  test('Upload whole file', () async {
+    await uploader.upload();
+  });
 }

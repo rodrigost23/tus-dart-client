@@ -53,12 +53,21 @@ abstract class TusUploader {
       request.headers.set(header.key, header.value);
     }
 
-    await request.addStream(file.openRead(_offset, chunkSize));
+    await request.addStream(file.openRead(_offset, _offset + chunkSize));
 
     var response = await request.close();
 
     if (response.statusCode != 204) {
       throw TusProtocolException.fromResponse(response);
+    }
+
+    _offset += chunkSize;
+  }
+
+  Future<void> upload() async {
+    var size = await file.length();
+    while (_offset <= size) {
+      await uploadChunk();
     }
   }
 }
