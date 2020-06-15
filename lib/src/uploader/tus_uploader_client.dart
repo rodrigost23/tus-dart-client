@@ -15,6 +15,7 @@ class TusClientUploader extends TusUploader {
         super(
           file: file,
           headers: client.headers,
+          chunkSize: client.chunkSize,
         );
 
   /// Creates an uploader instance
@@ -24,14 +25,21 @@ class TusClientUploader extends TusUploader {
   }) async {
     var uploader = TusClientUploader._(client: client, file: file);
 
-    await uploader.createUrl();
+    var url = uploader._client.store?.get(uploader.fingerprint);
+
+    if (url != null) {
+      uploader.url = url;
+      uploader.offset = await uploader.retrieveOffset();
+    } else {
+      uploader.url = await uploader.createUrl();
+    }
 
     return uploader;
   }
 
-  Future<void> createUrl() async {
+  Future<Uri> createUrl() async {
     var request = await HttpClient().postUrl(_client.endpoint)
-      ..headers.set('Upload-Length', (await file.length()).toString());
+      ..headers.set('Upload-Length', size.toString());
 
     var metadata = encodedMetadata;
     if (metadata.isNotEmpty) {
@@ -62,6 +70,6 @@ class TusClientUploader extends TusUploader {
       _client.store?.set(fingerprint, url);
     }
 
-    this.url = url;
+    return url;
   }
 }

@@ -29,6 +29,8 @@ class TusClient {
   /// disables resuming.
   TusStore? store;
 
+  int? chunkSize;
+
   bool get resumingEnabled => store != null;
 
   /// Disables upload resuming.
@@ -44,10 +46,10 @@ class TusClient {
     this.endpoint, {
     this.headers = const <String, String>{},
     this.store,
+    this.chunkSize,
   });
 
   /// Gets an upload URL from the [endpoint] and creates a new uploader.
-  /// The arguments are the same as [TusUploader]'s constructor.
   Future<TusUploader> createUploader({
     required File file,
   }) async =>

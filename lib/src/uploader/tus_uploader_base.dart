@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:meta/meta.dart';
 import 'package:tus_client/src/exception/tus_protocol_exception.dart';
 import 'package:tus_client/src/tus_client_base.dart';
 
@@ -11,7 +12,8 @@ abstract class TusUploader {
   final Map<String, String> headers = {}..addAll(DEFAULT_HEADERS);
   late final Uri url;
   int chunkSize;
-  int _offset;
+  @protected
+  int offset;
   int? _size;
   String? _fingerprint;
 
@@ -25,10 +27,10 @@ abstract class TusUploader {
     Uri? url,
     Map<String, String>? metadata,
     Map<String, String> headers = const <String, String>{},
-    this.chunkSize = 2 * 1024 * 1024,
-    int offset = 0,
-  })  : _offset = offset,
-        metadata = metadata ?? {'filename': file.path.split('/').last} {
+    int? chunkSize,
+    this.offset = 0,
+  })  : metadata = metadata ?? {'filename': file.path.split('/').last},
+        chunkSize = chunkSize ?? 2 * 1024 * 1024 {
     this.headers.addAll(headers);
     if (url != null) {
       this.url = url;
@@ -59,7 +61,7 @@ abstract class TusUploader {
 
   /// Uploads all chunks sequentially.
   Future<void> upload() async {
-    while (_offset <= size) {
+    while (offset <= size) {
       await uploadChunk();
     }
   }
@@ -68,20 +70,49 @@ abstract class TusUploader {
   Future<void> uploadChunk() async {
     var request = await HttpClient().patchUrl(url)
       ..headers.set('Content-Type', 'application/offset+octet-stream')
-      ..headers.set('Upload-Offset', _offset);
+      ..headers.set('Upload-Offset', offset);
 
     for (var header in headers.entries) {
       request.headers.set(header.key, header.value);
     }
 
-    await request.addStream(file.openRead(_offset, _offset + chunkSize));
+    await request.addStream(file.openRead(offset, offset + chunkSize));
 
     var response = await request.close();
 
+    // Wrong offset
+    if (response.statusCode == 409) {
+      offset = await retrieveOffset();
+      return uploadChunk();
+    }
     if (response.statusCode != 204) {
       throw TusProtocolException.fromResponse(response);
     }
 
-    _offset += chunkSize;
+    offset += chunkSize;
+  }
+
+  Future<int> retrieveOffset() async {
+    var request = await HttpClient().headUrl(url);
+
+    for (var header in headers.entries) {
+      request.headers.set(header.key, header.value);
+    }
+
+    var response = await request.close();
+
+    var responseCode = response.statusCode;
+    if (responseCode < 200 || responseCode >= 300) {
+      throw TusProtocolException.fromResponse(response);
+    }
+
+    String? offset = response.headers.value('Upload-Offset');
+
+    if (offset?.isEmpty ?? true) {
+      // TODO: use a more specific Exception
+      throw Exception('no offset returned from the server');
+    } else {
+      return int.parse(offset);
+    }
   }
 }
