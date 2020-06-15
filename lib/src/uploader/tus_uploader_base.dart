@@ -7,22 +7,26 @@ import 'package:tus_client/src/tus_client_base.dart';
 abstract class TusUploader {
   static final DEFAULT_HEADERS = {'Tus-Resumable': TusClient.TUS_VERSION};
   final File file;
-  final Map<String, String> metadata;
+  Map<String, String> metadata;
   final Map<String, String> headers = {}..addAll(DEFAULT_HEADERS);
   late final Uri url;
   int chunkSize;
   int _offset;
 
-  /// Creates an uploader for [file]. The [url] must be defined before it any
-  /// method of this class is called.
+  /// Creates an uploader for [file].
+  ///
+  /// The [url] must be defined before any method of this class is called.
+  /// If [metadata] is not defined, then a `filename` based on [file] will be
+  /// set.
   TusUploader({
     required this.file,
     Uri? url,
-    this.metadata = const <String, String>{},
+    Map<String, String>? metadata,
     Map<String, String> headers = const <String, String>{},
     this.chunkSize = 2 * 1024 * 1024,
     int offset = 0,
-  }) : _offset = offset {
+  })  : _offset = offset,
+        metadata = metadata ?? {'filename': file.path.split('/').last} {
     this.headers.addAll(headers);
     if (url != null) {
       this.url = url;
@@ -44,6 +48,15 @@ abstract class TusUploader {
     return encodedList.join(',');
   }
 
+  /// Uploads all chunks sequentially.
+  Future<void> upload() async {
+    var size = await file.length();
+    while (_offset <= size) {
+      await uploadChunk();
+    }
+  }
+
+  /// Uploads a chunk based on [chunkSize].
   Future<void> uploadChunk() async {
     var request = await HttpClient().patchUrl(url)
       ..headers.set('Content-Type', 'application/offset+octet-stream')
@@ -62,12 +75,5 @@ abstract class TusUploader {
     }
 
     _offset += chunkSize;
-  }
-
-  Future<void> upload() async {
-    var size = await file.length();
-    while (_offset <= size) {
-      await uploadChunk();
-    }
   }
 }
