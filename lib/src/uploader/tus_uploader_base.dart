@@ -12,6 +12,8 @@ abstract class TusUploader {
   late final Uri url;
   int chunkSize;
   int _offset;
+  int? _size;
+  String? _fingerprint;
 
   /// Creates an uploader for [file].
   ///
@@ -48,9 +50,15 @@ abstract class TusUploader {
     return encodedList.join(',');
   }
 
+  /// The file fingerprint, which is used to store and find the URL for resuming
+  /// the upload
+  String get fingerprint => _fingerprint ??= (file.absolute.path + size.toString());
+
+  /// The file size
+  int get size => _size ??= file.lengthSync();
+
   /// Uploads all chunks sequentially.
   Future<void> upload() async {
-    var size = await file.length();
     while (_offset <= size) {
       await uploadChunk();
     }

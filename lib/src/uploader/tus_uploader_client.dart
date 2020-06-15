@@ -59,8 +59,7 @@ class TusClientUploader extends TusUploader {
     var url = _client.endpoint.resolve(urlStr);
 
     if (_client.resumingEnabled) {
-      // TODO: get fingerprint correctly
-      _client.store?.set('1234', url);
+      _client.store?.set(fingerprint, url);
     }
 
     this.url = url;
