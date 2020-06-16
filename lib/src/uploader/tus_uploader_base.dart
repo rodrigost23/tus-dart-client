@@ -5,10 +5,27 @@ import 'package:meta/meta.dart';
 import 'package:tus_client/src/exception/tus_protocol_exception.dart';
 import 'package:tus_client/src/tus_client_base.dart';
 
+/// The class responsible for uploading files to a server.
 abstract class TusUploader {
   static final DEFAULT_HEADERS = {'Tus-Resumable': TusClient.TUS_VERSION};
+
+  /// The file begin uploaded.
   final File file;
+
+  /// Metadata to send as `Upload-Metadata` header.
   Map<String, String> metadata;
+
+  /// The specific headers to send to the server.
+  ///
+  /// {@template headers_description}
+  ///
+  /// This can be used to set the server specific headers. These headers would
+  /// be sent along with every request made by the client to the server. This
+  /// may be used to set authentication headers. These headers should not
+  /// include headers required by tus protocol. If not set this defaults to an
+  /// empty dictionary.
+  ///
+  /// {@endtemplate}
   final Map<String, String> headers = {}..addAll(DEFAULT_HEADERS);
   int chunkSize;
   @protected
@@ -51,6 +68,8 @@ abstract class TusUploader {
 
   /// The file fingerprint, which is used to store and find the URL for resuming
   /// the upload
+  ///
+  /// TODO: give a way to choose a fingerprint function
   String get fingerprint => _fingerprint ??= (file.absolute.path + size.toString());
 
   /// The file size
@@ -64,6 +83,8 @@ abstract class TusUploader {
   }
 
   /// Uploads a chunk based on [chunkSize].
+  ///
+  /// Throws a [TusProtocolException] on any Tus-related error.
   Future<void> uploadChunk() async {
     var request = await HttpClient().patchUrl(url)
       ..headers.set('Content-Type', 'application/offset+octet-stream')

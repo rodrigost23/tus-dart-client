@@ -16,11 +16,10 @@ class TusClient {
   /// The endpoint url
   final Uri endpoint;
 
-  /// This can be used to set the server specific headers. These headers would
-  /// be sent along with every request made by the client to the server. This
-  /// may be used to set authentication headers. These headers should not
-  /// include headers required by tus protocol. If not set this defaults to an
-  /// empty dictionary.
+  /// The specific headers to send to the server.
+  ///
+  /// {@macro headers_description}
+  /// See [TusUploader.headers]
   Map<String, String> headers;
 
   OnProgressCallback? onProgress;
@@ -40,7 +39,9 @@ class TusClient {
   /// If [store] is defined, then resuming is enabled (see [resumingEnabled]).
   ///
   /// ```dart
-  /// var client = TusClient(Uri.http('localhost:1080', '/files'));
+  ///   Uri.http('localhost:1080', '/files/'),
+  ///   store: TusMemoryStore(),
+  /// );
   /// ```
   TusClient(
     this.endpoint, {
@@ -49,7 +50,10 @@ class TusClient {
     this.chunkSize,
   });
 
-  /// Gets an upload URL from the [endpoint] and creates a new uploader.
+  /// Creates a new [TusUploader].
+  ///
+  /// If resuming is enabled, i.e., the [store] is not null, this method first
+  /// searches for the
   Future<TusUploader> createUploader({
     required File file,
   }) async =>
