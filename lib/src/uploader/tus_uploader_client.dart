@@ -7,6 +7,7 @@ import 'tus_uploader_base.dart';
 
 class TusClientUploader extends TusUploader {
   final TusClient _client;
+  late Uri _url;
 
   TusClientUploader._({
     required TusClient client,
@@ -18,24 +19,8 @@ class TusClientUploader extends TusUploader {
           chunkSize: client.chunkSize,
         );
 
-  /// Creates an uploader instance
-  static Future<TusClientUploader> create({
-    required TusClient client,
-    required file,
-  }) async {
-    var uploader = TusClientUploader._(client: client, file: file);
-
-    var url = uploader._client.store?.get(uploader.fingerprint);
-
-    if (url != null) {
-      uploader.url = url;
-      uploader.offset = await uploader.retrieveOffset();
-    } else {
-      uploader.url = await uploader.createUrl();
-    }
-
-    return uploader;
-  }
+  @override
+  Uri get url => _url;
 
   Future<Uri> createUrl() async {
     var request = await HttpClient().postUrl(_client.endpoint)
@@ -71,5 +56,30 @@ class TusClientUploader extends TusUploader {
     }
 
     return url;
+  }
+
+  /// Initializes the url and offset.
+  Future<void> init() async {
+    // Tries to get the URL from the store
+    var url = _client.store?.get(fingerprint);
+
+    if (url != null) {
+      _url = url;
+      offset = await retrieveOffset();
+    } else {
+      _url = await createUrl();
+    }
+  }
+
+  /// Creates an uploader instance
+  static Future<TusClientUploader> create({
+    required TusClient client,
+    required file,
+  }) async {
+    var uploader = TusClientUploader._(client: client, file: file);
+
+    await uploader.init();
+
+    return uploader;
   }
 }

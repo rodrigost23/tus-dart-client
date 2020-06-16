@@ -10,7 +10,6 @@ abstract class TusUploader {
   final File file;
   Map<String, String> metadata;
   final Map<String, String> headers = {}..addAll(DEFAULT_HEADERS);
-  late final Uri url;
   int chunkSize;
   @protected
   int offset;
@@ -19,12 +18,10 @@ abstract class TusUploader {
 
   /// Creates an uploader for [file].
   ///
-  /// The [url] must be defined before any method of this class is called.
   /// If [metadata] is not defined, then a `filename` based on [file] will be
   /// set.
   TusUploader({
     required this.file,
-    Uri? url,
     Map<String, String>? metadata,
     Map<String, String> headers = const <String, String>{},
     int? chunkSize,
@@ -32,10 +29,10 @@ abstract class TusUploader {
   })  : metadata = metadata ?? {'filename': file.path.split('/').last},
         chunkSize = chunkSize ?? 2 * 1024 * 1024 {
     this.headers.addAll(headers);
-    if (url != null) {
-      this.url = url;
-    }
   }
+
+  /// The URL to upload the file to.
+  Uri get url;
 
   /// The metadata encoded as the tus protocol requires.
   String get encodedMetadata {
