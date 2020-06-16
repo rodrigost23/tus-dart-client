@@ -65,10 +65,19 @@ class TusClientUploader extends TusUploader {
 
     if (url != null) {
       _url = url;
-      offset = await retrieveOffset();
-    } else {
-      _url = await createUrl();
+      try {
+        offset = await retrieveOffset();
+        return;
+      } on TusProtocolException catch (e) {
+        // Server returned 404 'not found' or 410 'gone'.
+        if (e.code != 404 && e.code != 410) {
+          rethrow;
+        }
+      }
     }
+
+    // If no URL was set from the store or the server does not have the file
+    _url = await createUrl();
   }
 
   /// Creates an uploader instance

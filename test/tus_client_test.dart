@@ -7,7 +7,7 @@ import 'package:test/test.dart';
 void main() {
   late TusClient client;
   late TusUploader uploader;
-  final url = Uri.http('localhost:1080', '/files/');
+  final url = Uri.http('master.tus.io', '/files/');
 
   group('No resume support', () {
     setUp(() async {
@@ -55,6 +55,16 @@ void main() {
 
       var downloaded = await response.transform(utf8.decoder).single;
       expect(downloaded, uploader2.file.readAsStringSync());
+    });
+
+    test('Invalid URL from store results in different URL', () async {
+      var wrongUrl = url.resolve('123456');
+
+      store.set(uploader.fingerprint, wrongUrl);
+
+      uploader = await client.createUploader(file: File('./LICENSE'));
+
+      expect(uploader.url, isNot(equals(wrongUrl)));
     });
   });
 }
