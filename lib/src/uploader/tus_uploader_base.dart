@@ -83,7 +83,7 @@ abstract class TusUploader {
       return uploadChunk();
     }
     if (response.statusCode != 204) {
-      throw TusProtocolException.fromResponse(response);
+      throw await TusProtocolException.fromResponse(response);
     }
 
     offset += chunkSize;
@@ -100,7 +100,7 @@ abstract class TusUploader {
 
     var responseCode = response.statusCode;
     if (responseCode < 200 || responseCode >= 300) {
-      throw TusProtocolException.fromResponse(response);
+      throw await TusProtocolException.fromResponse(response);
     }
 
     String? offset = response.headers.value('Upload-Offset');

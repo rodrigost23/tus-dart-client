@@ -39,7 +39,7 @@ class TusClientUploader extends TusUploader {
 
     var responseCode = response.statusCode;
     if (responseCode < 200 || responseCode >= 300) {
-      throw TusProtocolException.fromResponse(response);
+      throw await TusProtocolException.fromResponse(response);
     }
 
     String? urlStr = response.headers.value('Location');
