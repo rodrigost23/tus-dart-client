@@ -1,0 +1,16 @@
+language: dart
+with_content_shell: false
+env:
+  - DART_VM_OPTIONS="--enable-experiment=non-nullable -DSILENT_OBSERVATORY=true"
+script:
+  - dartanalyzer --enable-experiment=non-nullable --fatal-warnings ./
+  - dartfmt -n ./lib --set-exit-if-changed
+  - pub run test --coverage=coverage
+  - pub run coverage:format_coverage
+      --lcov
+      --in=coverage
+      --out=lcov.info
+      --packages=.packages
+      --report-on=lib
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
