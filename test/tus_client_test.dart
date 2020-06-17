@@ -35,7 +35,7 @@ void main() {
     });
 
     test('Store saved the URL', () async {
-      expect(store.get(uploader.fingerprint), equals(uploader.url));
+      expect(store[uploader.fingerprint], equals(uploader.url));
     });
 
     test('Second uploader has the same URL as the first', () async {
@@ -60,7 +60,7 @@ void main() {
     test('Invalid URL from store results in different URL', () async {
       var wrongUrl = url.resolve('123456');
 
-      store.set(uploader.fingerprint, wrongUrl);
+      store[uploader.fingerprint] = wrongUrl;
 
       uploader = await client.createUploader(file: File('./LICENSE'));
 
