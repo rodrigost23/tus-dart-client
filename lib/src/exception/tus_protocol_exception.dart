@@ -8,8 +8,10 @@ class TusProtocolException implements Exception {
   TusProtocolException({required this.code, this.error});
 
   /// Asyncronously create an exception from the provided [response].
-  static Future<TusProtocolException> fromResponse(HttpClientResponse response) async {
-    var error = await response.transform(ascii.decoder).single.catchError((_) => null);
+  static Future<TusProtocolException> fromResponse(
+      HttpClientResponse response) async {
+    var error =
+        await response.transform(ascii.decoder).single.catchError((_) => null);
 
     return TusProtocolException(
       code: response.statusCode,

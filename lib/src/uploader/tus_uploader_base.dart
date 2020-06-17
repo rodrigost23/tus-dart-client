@@ -60,7 +60,8 @@ abstract class TusUploader {
 
     var encodedList = [''];
     for (var entry in metadata.entries) {
-      encodedList.add((entry.key + ' ') + base64Encode(utf8.encode(entry.value)));
+      encodedList
+          .add((entry.key + ' ') + base64Encode(utf8.encode(entry.value)));
     }
 
     return encodedList.join(',');
@@ -70,7 +71,8 @@ abstract class TusUploader {
   /// the upload
   ///
   /// TODO: give a way to choose a fingerprint function
-  String get fingerprint => _fingerprint ??= (file.absolute.path + size.toString());
+  String get fingerprint =>
+      _fingerprint ??= (file.absolute.path + size.toString());
 
   /// The file size
   int get size => _size ??= file.lengthSync();
