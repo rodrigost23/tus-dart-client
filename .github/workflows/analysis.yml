@@ -1,0 +1,33 @@
+name: Package Analysis
+
+on: [ push, pull_request ]
+
+jobs:
+  package-analysis:
+    runs-on: ubuntu-latest
+    
+    env:
+      DART_VM_OPTIONS: --enable-experiment=non-nullable
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: axel-op/dart-package-analyzer@v2
+        id: analysis # set an id for the current step
+        with:
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check scores
+        # NB: "analysis" is the id set above. Replace it with the one you used if different.
+        run: |
+          ERRORS=${{ steps.analysis.outputs.errors }}
+          if (( $(echo "$ERRORS > 0" | bc) ))
+          then
+            echo "::error::$ERRORS errors were found in the analysis"
+          fi
+          
+          WARNINGS=${{ steps.analysis.outputs.warnings }}
+          if (( $(echo "$WARNINGS > 0" | bc) ))
+          then
+            echo "::warning::$WARNINGS warnings were found in the analysis"
+          fi
