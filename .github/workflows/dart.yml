@@ -1,0 +1,35 @@
+name: Dart CI
+
+on: [ push, pull_request ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    container:
+      image:  google/dart:latest
+
+    env:
+      DART_VM_OPTIONS: --enable-experiment=non-nullable
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: pub get
+    - name: Analyze
+      run: dartanalyzer --enable-experiment=non-nullable --fatal-warnings ./
+    - name: Check format
+      run: dartfmt -n ./lib --set-exit-if-changed
+    - name: Run tests
+      run: pub run test --coverage=coverage
+    - name: Format coverage file
+      run: >
+        pub run coverage:format_coverage
+        --lcov
+        --in=coverage
+        --out=lcov.info
+        --packages=.packages
+        --report-on=lib
+    - name: Upload to codecov.io
+      shell: bash
+      run: bash <(curl -s https://codecov.io/bash)
